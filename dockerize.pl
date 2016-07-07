@@ -3,9 +3,34 @@
 use strict;
 use JSON;
 use File::Basename;
+use Getopt::Std;
 
-my $C = &read_config("config.json");
-my $LANG = $C->{language};
+my %opts;
+
+sub usage {
+
+    my $str = shift;
+    my $c = "Usage: " . basename $0 . "\n";
+    $c .= <<'BUK';
+	-c	config file (default config.json)
+	-h	this help
+	-l	language
+	-p	pipeline (separated by colons, e.g. 'tok:pos:nerc')
+BUK
+    chomp($str);
+    $c .= "\n$str\n" if defined $str;
+    die $c;
+}
+
+getopts('c:hl:p:', \%opts); # -x eta -m switchak balio bat dute
+
+&usage() if defined $opts{'h'};
+
+my $config_fname = "config.json";
+$config_fname = $opts{'c'} if defined $opts{'c'};
+my $C = &read_config($config_fname);
+my $LANG = $C->{lang};
+$LANG = $opts{'l'} if defined $opts{'l'};
 if (not defined $LANG) {
     warn "No language set. Default to 'en'\n";
     $LANG = "en";
@@ -13,7 +38,13 @@ if (not defined $LANG) {
 
 my @autoruns = ("cat");
 my $dockerfile = "";
-foreach my $pipe (@{ $C->{pipeline} }) {
+my $P = $C->{pipeline};
+if (defined $opts{'p'}) {
+    my @aux = split(/:/, $opts{'p'});
+    $P = \@aux;
+}
+
+foreach my $pipe (@{ $P }) {
     die "Can't locate $pipe in config file\n" unless defined $C->{pipes}->{$pipe};
     $dockerfile .= &dockerfile($C->{pipes}->{$pipe});
     push @autoruns, &autorun($C->{pipes}->{$pipe});
@@ -70,7 +101,8 @@ sub autorun {
     my $hostjar = $config->{'jar'};
     die "[E] $hostjar does not exist\n" unless -e $hostjar;
     my $dockerjar = basename($hostjar);
-    my $models_cli;
+    my $content = "java -jar ${dockerjar}";
+    $content .= " ".$config->{'cli-opt'} if defined $config->{'cli-opt'};
     if (defined $config->{models}) {
         my @A;
         foreach my $h (@{ $config->{models} }) {
@@ -78,14 +110,9 @@ sub autorun {
             substr($cli_opt, 0, 0) = "-" unless $cli_opt =~ /^\s*-/;
             push @A, $cli_opt . " " . $h->{'file'};
         }
-        $models_cli = join(" ", @A);
+        $content .= " " . join(" ", @A);
     }
-    my $content = $config->{run};
-    $content =~ s/\n//;
     $content =~ s/\$\{lang\}/$LANG/go;
-    $content =~ s/\$\{hostjar\}/$hostjar/go;
-    $content =~ s/\$\{dockerjar\}/$dockerjar/go;
-    $content =~ s/\$\{models_cli\}/$models_cli/go;
     return $content;
 }
 

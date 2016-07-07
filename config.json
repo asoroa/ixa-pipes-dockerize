@@ -1,13 +1,13 @@
 {
-    "language" : "en",
+    "lang" : "en",
     "pipes" : {
         "tok" : {
             "jar" : "jar/ixa-pipe-tok-1.8.4.jar",
-            "run" : "java -jar ${dockerjar} tok -l ${lang}"
+            "cli-opt" : "tok -l ${lang}"
         },
         "pos" : {
             "jar" : "jar/ixa-pipe-pos-1.5.1.jar",
-            "run" : "java -jar ${dockerjar} tag ${models_cli}",
+            "cli-opt" : "tag",
             "models" : [
                 {
                     "file" : "model/en-pos-perceptron-autodict01-conll09.bin",
@@ -15,13 +15,13 @@
                 },
                 {
                     "file" : "model/en-lemma-perceptron-conll09.bin",
-                    "cli-opt" : "lm"
+                    "cli-opt" : "-lm"
                 }
             ]
         },
         "nerc" : {
             "jar" : "jar/ixa-pipe-nerc-1.6.0-exec.jar",
-            "run" : "java -jar ${dockerjar} tag ${models_cli}",
+            "cli-opt" : "tag",
             "models" : [
                 {
                     "file" : "model/en-local-conll03.bin",
