@@ -87,8 +87,8 @@ sub dockerfile {
         foreach my $h ( @{ $config->{models} } ) {
             my $hostfile = $h->{file};
             die "[E] $hostfile does not exist\n" unless -e $hostfile;
-            my $dockerfile = basename $hostfile;
-            $content .= "COPY $hostfile $hostfile\n";
+            my $dock_bname = basename $hostfile;
+            $content .= "COPY $hostfile model/$dock_bname\n";
         }
     }
     return $content;
@@ -108,7 +108,9 @@ sub autorun {
         foreach my $h (@{ $config->{models} }) {
             my $cli_opt = $h->{'cli-opt'};
             substr($cli_opt, 0, 0) = "-" unless $cli_opt =~ /^\s*-/;
-            push @A, $cli_opt . " " . $h->{'file'};
+            my $hostfile = $h->{file};
+            my $dock_bname = basename $hostfile;
+            push @A, $cli_opt . " model/" . $dock_bname;
         }
         $content .= " " . join(" ", @A);
     }
