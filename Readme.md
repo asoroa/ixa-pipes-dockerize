@@ -92,7 +92,7 @@ required to create the image.
 
 Then, build the image directly, for instance, 
 ```
-docker built -t tok-pos-nerc .
+docker build -t tok-pos-nerc .
 ```
 
 You are now ready to run the toolchain into a docker container:
